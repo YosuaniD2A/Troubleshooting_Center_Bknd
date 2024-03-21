@@ -254,7 +254,7 @@ const getSalesReportByMark = (initialDate, finalDate, mark) => {
         FROM
             orders o join
             brand_dictionary b on substr(o.sku, 1, 2) = b.literals join
-            shutterstock_metadata sm on substr(o.sku, 4, 6) = sm.id
+            shutterstock_metadata sm on cast(substr(o.sku, 3, 8) as signed) = sm.id
         WHERE
             o.order_date BETWEEN ? AND ? AND 
             o.proportional > 0 AND 

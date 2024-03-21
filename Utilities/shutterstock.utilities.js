@@ -35,7 +35,7 @@ const factoryShutterstock = (credentials = {}) => {
         try {
             if (imageType === "Commercial") {
                 const getImageData = await fetch(
-                    `${process.env.API_URL_SANDBOX}images/${imageId}`,
+                    `${process.env.API_URL_BASE}images/${imageId}`,
                     {
                         headers,
                     }
@@ -217,7 +217,7 @@ const factoryShutterstock = (credentials = {}) => {
                   };
                   const body = JSON.stringify(bodyData);
                   const licenseOfimage = await fetch(
-                    `${process.env.API_URL_SANDBOX}images/licenses`,
+                    `${process.env.API_URL_BASE}images/licenses`, // Cambiar el sandbox
                     {
                       headers: headers2,
                       method: "POST",
@@ -228,36 +228,36 @@ const factoryShutterstock = (credentials = {}) => {
                   return await licenseOfimage.json();
             }else{
                 // Esta parte licencia las imagenes editoriales
-                // const headers2 = {
-                //     "Content-type": "application/json",
-                //     Accept: "application/json",
-                //     Authorization: `Bearer ${process.env.SHUTTERSTOCK_EDITORIAL_LICENSOR_TOKEN}`,
-                //   };
-                // const bodyData = {
-                //   editorial: [
-                //     {
-                //       editorial_id: order.shutterstock_id,
-                //       license: "premier_editorial_all_media",
-                //       metadata: {
-                //         order_id: uuidv4(),
-                //       },
-                //     },
-                //   ],
-                //   country: "USA",
-                // };
-                // const body = JSON.stringify(bodyData);
-                // licenseOfimage = await fetch(
-                //   `${process.env.API_URL_BASE}editorial/images/licenses`,
-                //   {
-                //     headers: headers2,
-                //     method: "POST",
-                //     body,
-                //   }
-                // );
+                const headers2 = {
+                    "Content-type": "application/json",
+                    Accept: "application/json",
+                    Authorization: `Bearer ${process.env.SHUTTERSTOCK_EDITORIAL_LICENSOR_TOKEN}`,
+                  };
+                const bodyData = {
+                  editorial: [
+                    {
+                      editorial_id: order.shutterstock_id,
+                      license: "premier_editorial_all_media",
+                      metadata: {
+                        order_id: uuidv4(),
+                      },
+                    },
+                  ],
+                  country: "USA",
+                };
+                const body = JSON.stringify(bodyData);
+                licenseOfimage = await fetch(
+                  `${process.env.API_URL_BASE}editorial/images/licenses`,
+                  {
+                    headers: headers2,
+                    method: "POST",
+                    body,
+                  }
+                );
             
-                // return await licenseOfimage.json();
+                return await licenseOfimage.json();
 
-                return {message: "Esto es una imagen Editorial"};
+                // return {message: "Esto es una imagen Editorial"};   // Comentar 
             }
 
         } catch (error) {
@@ -354,6 +354,15 @@ const insertDBReport = async (order) => {
     }
 };
 
+// Funcion encargada de aleatorizar una lista
+const shuffle = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+};
+
 
 module.exports = {
     getImageIdFromUrl,
@@ -362,5 +371,6 @@ module.exports = {
     insertDB,
     saveImages,
     get30DaysAgoDate,
-    insertDBReport
+    insertDBReport,
+    shuffle
 }

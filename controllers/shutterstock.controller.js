@@ -2,7 +2,7 @@ const fs = require("fs");
 const csv = require("csv-parser");
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
-const { importCsv, factoryShutterstock, insertDB, saveImages, get30DaysAgoDate, insertDBReport } = require("../Utilities/shutterstock.utilities");
+const { importCsv, factoryShutterstock, insertDB, saveImages, get30DaysAgoDate, insertDBReport, shuffle } = require("../Utilities/shutterstock.utilities");
 const { getOrdersWithShutterId, getReportSendToday } = require("../models/shutterstock.model");
 
 // Funcion que devuelve toda la informacion de las imagenes que se cargan del CSV
@@ -105,7 +105,8 @@ const downloadAndSave = async (req, res) => {
     }));
 
     res.send({
-        path: 'C:/Users/yborg/OneDrive/Documents/Proyectos activos/Dashboard D2America/Troubleshooting_bknd/download/',
+        // path: 'C:/Users/yborg/OneDrive/Documents/Proyectos activos/Dashboard D2America/Troubleshooting_bknd/download/',
+        path: 'C:/Users/loren/Documents/Proyectos Angular/Troubleshooting Github/Troubleshooting_Center_Bknd/downloads/',
         imageType,
         result,
     });
@@ -134,11 +135,16 @@ const licenseImageToReport = async (req, res) => {
 
                 return;
             }))
-
         }
 
+        const shuffledList = shuffle([...listofAvailables]);
+
+        const percent = 0.6;
+        const desiredLength  = Math.ceil(listofAvailables.length * percent);
+        const newList = shuffledList.slice(0, desiredLength);
+
         // Esta seccion de codigo es la encargada de realizar el licenciamiento de las ordenes
-        const listofLicensedImages = await Promise.all(listofAvailables.map(async (order) => {
+        const listofLicensedImages = await Promise.all(newList.map(async (order) => {
             const result = await factoryShutterstock().licenseImageToReport(order);
 
             if (result.errors) {
@@ -159,11 +165,11 @@ const licenseImageToReport = async (req, res) => {
                         order_date: order.order_date,
                         license_account: (/[a-zA-Z]/.test(order.shutterstock_id)) ? 'd2apiplatformretailliveeditorial' : 'd2apiplatformretaillive',
                         price: order.unit_price,
-                        revsahre: parseFloat((order.unit_price * 0.16).toFixed(2)),
+                        revsahre: (/[a-zA-Z]/.test(order.shutterstock_id)) ? 9.00 : parseFloat((order.unit_price * 0.16).toFixed(2)),
                         license: result.data[0].license_id,
                         licensed_time: new Date().toISOString()
                     };
-                } else {
+                } else {  // Ajustar este codigo eliminando este ELSE
                     return {
                         shutterstock_id: order.shutterstock_id,
                         order_date: order.order_date,
@@ -233,11 +239,14 @@ const autoLicenseImageToReport = async () => {
 
                 return;
             }))
-
         }
 
+        const percent = 0.6;
+        const desiredLength  = Math.ceil(listofAvailables.length * percent);
+        const newList = listofAvailables.slice(0, desiredLength);
+
         // Esta seccion de codigo es la encargada de realizar el licenciamiento de las ordenes
-        const listofLicensedImages = await Promise.all(listofAvailables.map(async (order) => {
+        const listofLicensedImages = await Promise.all(newList.map(async (order) => {
             const result = await factoryShutterstock().licenseImageToReport(order);
 
             if (result.errors) {
@@ -258,7 +267,7 @@ const autoLicenseImageToReport = async () => {
                         order_date: order.order_date,
                         license_account: (/[a-zA-Z]/.test(order.shutterstock_id)) ? 'd2apiplatformretailliveeditorial' : 'd2apiplatformretaillive',
                         price: order.unit_price,
-                        revsahre: parseFloat((order.unit_price * 0.16).toFixed(2)),
+                        revsahre: (/[a-zA-Z]/.test(order.shutterstock_id)) ? 9.00 : parseFloat((order.unit_price * 0.16).toFixed(2)),
                         license: result.data[0].license_id,
                         licensed_time: new Date().toISOString()
                     };
