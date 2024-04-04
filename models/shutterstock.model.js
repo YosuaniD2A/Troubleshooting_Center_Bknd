@@ -1,7 +1,7 @@
 const db = require("../config/dbConfig").promise();
 
 const insertImageCommercialMetadata = (imageMetadata) => {
-    return db.query('INSERT INTO shutterstock_prueba (shutterstock_id, description, categories, keywords, contributor, is_adult, displayname, file_size, format, is_licensable, requested_date, filename, license_id) VALUES (?,?,?,?,?,?,?,?,?,?,NOW(),?,?)',
+    return db.query('INSERT INTO shutterstock_metadata (shutterstock_id, description, categories, keywords, contributor, is_adult, displayname, file_size, format, is_licensable, requested_date, filename, license_id) VALUES (?,?,?,?,?,?,?,?,?,?,NOW(),?,?)',
         [
             imageMetadata.shutterstock_id,
             imageMetadata.description,
@@ -19,7 +19,7 @@ const insertImageCommercialMetadata = (imageMetadata) => {
 }
 
 const insertImageEditorialMetadata = (imageMetadata) => {
-    return db.query('INSERT INTO shutterstock_prueba (shutterstock_id, description, categories, keywords, displayname,  is_licensable, requested_date, filename, license_id) VALUES (?,?,?,?,?,?,NOW(),?,?)',
+    return db.query('INSERT INTO shutterstock_metadata (shutterstock_id, description, categories, keywords, displayname,  is_licensable, requested_date, filename, license_id) VALUES (?,?,?,?,?,?,NOW(),?,?)',
         [
             imageMetadata.shutterstock_id,
             imageMetadata.description,
@@ -33,7 +33,7 @@ const insertImageEditorialMetadata = (imageMetadata) => {
 }
 
 const getImageMetadata = (imageMetadataId) => {
-    return db.query('SELECT *  FROM shutterstock_prueba WHERE shutterstock_id = ?', [imageMetadataId]);
+    return db.query('SELECT *  FROM shutterstock_metadata WHERE shutterstock_id = ?', [imageMetadataId]);
 }
 
 const getOrdersWithShutterId = (date) => {

@@ -8,6 +8,7 @@ const cron = require('node-cron');
 
 const indexRouter = require('./routes/index');
 const shutterstockRouter = require('./routes/shutterstock');
+const creaTuPlayera = require('./routes/crea_tu_playera');
 const brokedImageRouter = require('./routes/broked_image');
 const scalablepressRouter = require('./routes/scalablepress');
 const salesReportRouter = require('./routes/sales_report');
@@ -36,6 +37,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/shutterstock', shutterstockRouter);
+app.use('/crea_tu_playera', creaTuPlayera);
 app.use('/broked_image', brokedImageRouter);
 app.use('/scalablepress', scalablepressRouter);
 app.use('/sales_report', salesReportRouter);

@@ -14,7 +14,7 @@ const uploadCSV = async (req, res) => {
         const listOfIds = await importCsv(
             fs.createReadStream(filePath).pipe(csv()));
 
-        console.log(imageType)
+        console.log(`Tipo de imagen: ${imageType}`)
         const imageMetadataPromises = await Promise.all(listOfIds.map(async (elem) => {
             const getInfoOfImage = await factoryShutterstock(
                 process.env.SHUTTERSTOCK_INGESTION_COMMERCIAL_AND_EDITORIAL_TOKEN
@@ -82,7 +82,7 @@ const downloadAndSave = async (req, res) => {
     const licenses = await Promise.all(data.map(async (image) => {
         if (image !== null) {
             const result = await insertDB(image, imageType);
-            if (!result.includes('existe')) {
+            if (!result.includes('existi')) {
                 return await factoryShutterstock(process.env.SHUTTERSTOCK_INGESTION_COMMERCIAL_AND_EDITORIAL_TOKEN)
                     .licenseImageToDownload(image.shutterstock_id, imageType);
             } else {

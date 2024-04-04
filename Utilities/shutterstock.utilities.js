@@ -81,7 +81,7 @@ const factoryShutterstock = (credentials = {}) => {
                 };
                 const body = JSON.stringify(bodyData);
                 const licenseOfimage = await fetch(
-                    `${process.env.API_URL_SANDBOX}images/licenses`,
+                    `${process.env.API_URL_BASE}images/licenses`,
                     {
                         headers,
                         method: "POST",
@@ -279,16 +279,16 @@ const factoryShutterstock = (credentials = {}) => {
 const insertDB = async (imageMetadata, imageType) => {
     try {
         if (imageMetadata !== null) {
-            const [result] = await getImageMetadata(imageMetadata.shutterstock_id);
-            if (!result[0]) {
+            // const [result] = await getImageMetadata(imageMetadata.shutterstock_id);
+            // if (!result[0]) {
                 if (imageType === "Commercial") {
                     const [data] = await insertImageCommercialMetadata(imageMetadata);
                 } else {
                     const [data] = await insertImageEditorialMetadata(imageMetadata);
                 }
                 return `El registro con ID: ${imageMetadata.shutterstock_id} se guardo satisfactoriamente en la BD`;
-            }
-            return `El registro con ID: ${imageMetadata.shutterstock_id} ya existe en la BD`;
+            // }
+            // return `El registro con ID: ${imageMetadata.shutterstock_id} ya existe en la BD`;
         }
 
     } catch (error) {
@@ -305,7 +305,7 @@ const saveImages = async (imageUrl) => {
     const imageId = getImageIdFromUrl(imageUrl.url);
     const options = {
         url: imageUrl.url,
-        dest: `C:/Users/loren/Documents/Proyectos Angular/Troubleshooting_Bknd/download/${imageId}.jpg`,
+        dest: `C:/Users/loren/Documents/Proyectos Angular/Troubleshooting Github/Troubleshooting_Center_Bknd/downloads/${imageId}.jpg`,
     };
     try {
         const { filename } = await download.image(options);
