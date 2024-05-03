@@ -13,6 +13,7 @@ const brokedImageRouter = require('./routes/broked_image');
 const scalablepressRouter = require('./routes/scalablepress');
 const salesReportRouter = require('./routes/sales_report');
 const shippingAddressRouter = require('./routes/shipping_address');
+const swiftpod = require('./routes/swiftpod');
 const { autoLicenseImageToReport } = require('./controllers/shutterstock.controller');
 
 require('dotenv').config();
@@ -42,6 +43,7 @@ app.use('/broked_image', brokedImageRouter);
 app.use('/scalablepress', scalablepressRouter);
 app.use('/sales_report', salesReportRouter);
 app.use('/shipping_address', shippingAddressRouter);
+app.use('/swiftpod', swiftpod);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -11,7 +11,7 @@ const getCTPOrdersStatusModel = () => {
             ctp.status != 8 AND 
             ctp.status != 516 AND 
             ctp.status != 128 AND 
-            ctp.date > STR_TO_DATE('2024-04-02', '%Y-%m-%d') 
+            ctp.date > STR_TO_DATE('2024-04-04', '%Y-%m-%d') 
         ORDER BY 
             ctp.date 
         DESC;`)

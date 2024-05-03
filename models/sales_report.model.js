@@ -181,7 +181,7 @@ const getSalesReportBrands = (initialDate, finalDate) => {
 const getSalesReportShutterstockSplit = (initialDate, finalDate) => {
     return db.query(
         `SELECT 
-            sum(e.quantity) as quantity, round(sum(e.proportional),2) revenue ,e.id_sstk 
+        e.id_sstk as licenses, sum(e.quantity) as quantity, round(sum(e.proportional),2) revenue 
         FROM (
             SELECT
                 o.order_date,
