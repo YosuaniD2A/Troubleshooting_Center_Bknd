@@ -11,7 +11,7 @@ const getIncomingOrdersModel = () => {
 // }
 
 const getArtFront = (art) => {
-    return db.query(`SELECT * FROM art_url_clone WHERE art = ? AND type = 'front'`,[art])
+    return db.query(`SELECT * FROM art_url WHERE art = ? AND type = 'front'`,[art])
 }
 
 const saveArtFrontModel = (art) => {
@@ -29,7 +29,7 @@ const saveArtFrontModel = (art) => {
 }
 
 const getMock = (sku) => {
-    return db.query('SELECT * FROM mockup_url_clone WHERE sku = ?',[sku])
+    return db.query('SELECT * FROM mockup_url WHERE sku = ?',[sku])
 }
 
 const saveMockupModel = (mockup) => {
@@ -46,12 +46,12 @@ const saveMockupModel = (mockup) => {
 }
 
 const getShipping = (site_order_id) => {
-    return db.query('SELECT * FROM shipping_labels_clone WHERE site_order_id = ?',[site_order_id])
+    return db.query('SELECT * FROM shipping_labels WHERE site_order_id = ?',[site_order_id])
 }
 
 const saveShippingLabelModel = (shippingLabel) => {
     return db.query(
-        `INSERT INTO shipping_labels_clone 
+        `INSERT INTO shipping_labels 
             (site_order_id, guide_number, carrier, url, tracking_url) 
         VALUES 
             (?,?,?,?,?)`,
@@ -65,20 +65,20 @@ const saveShippingLabelModel = (shippingLabel) => {
 }
 
 const getArtInnerNeck = (art) => {
-    return db.query(`SELECT * FROM art_url_clone WHERE art = ? AND type = 'inner_neck'`,[art])
+    return db.query(`SELECT * FROM art_url WHERE art = ? AND type = 'inner_neck'`,[art])
 }
 
 const getArtOuterNeck = (art) => {
-    return db.query(`SELECT * FROM art_url_clone WHERE art = ? AND type = 'outer_neck'`,[art])
+    return db.query(`SELECT * FROM art_url WHERE art = ? AND type = 'outer_neck'`,[art])
 }
 
 const deleteArtNeckModel = (art) => {
-    return db.query(`DELETE FROM art_url_clone WHERE art = ? AND type = 'inner_neck'`,[art])
+    return db.query(`DELETE FROM art_url WHERE art = ? AND type = 'inner_neck'`,[art])
 }
 
 const saveArtNeckModel = (art) => {
     return db.query(
-        `INSERT INTO art_url_clone 
+        `INSERT INTO art_url 
             (art, url, pod, type) 
         VALUES 
             (?,?,?,?)`,
