@@ -1,22 +1,22 @@
 const db = require("../config/dbConfig").promise();
 const dbRail = require("../config/railwayDbConfig").promise();
 
-const getIncomingOrdersModel = () => {
-    return db.query(`
-    SELECT * FROM pod2_orders WHERE podService COLLATE utf8mb4_unicode_ci IN('swiftpod')`);
-}
 // const getIncomingOrdersModel = () => {
 //     return db.query(`
-//     SELECT * FROM pod_orders`);
+//     SELECT * FROM pod2_orders WHERE podService COLLATE utf8mb4_unicode_ci IN('swiftpod')`);
 // }
+const getIncomingOrdersModel = () => {
+    return db.query(`
+    SELECT * FROM pod2_orders`);
+}
 
-const getArtFront = (art) => {
-    return db.query(`SELECT * FROM art_url WHERE art = ? AND type = 'front'`,[art])
+const getArt = (art, type, pod) => {
+    return db.query(`SELECT * FROM art_url WHERE art = ? AND type = ? AND pod = ?`,[art, type, pod])
 }
 
 const saveArtFrontModel = (art) => {
     return db.query(
-        `INSERT INTO art_url_clone 
+        `INSERT INTO art_url 
             (art, url, pod, type) 
         VALUES 
             (?,?,?,?)`,
@@ -28,19 +28,20 @@ const saveArtFrontModel = (art) => {
         ]);
 }
 
-const getMock = (sku) => {
-    return db.query('SELECT * FROM mockup_url WHERE sku = ?',[sku])
+const getMock = (sku, type, region) => {
+    return db.query(`SELECT * FROM mockup_url WHERE sku = ? AND type = ? AND region = ?`,[sku, type, region])
 }
 
 const saveMockupModel = (mockup) => {
     return db.query(
-        `INSERT INTO mockup_url_clone 
-            (sku, url, type) 
+        `INSERT INTO mockup_url 
+            (sku, url, region, type) 
         VALUES 
-            (?,?,?)`,
+            (?,?,?,?)`,
         [
             mockup.sku,
             mockup.url,
+            mockup.region,
             mockup.type
         ]);
 }
@@ -116,34 +117,51 @@ const getSwiftPODOrderModel = () => {
             swiftpod_orders sfp 
         WHERE 
             sfp.status != 'cancelled' AND 
+            sfp.status != 'rejected' AND
+            sfp.status != 'in_production_cancelled' AND
             (sfp.tracking_code IS NULL OR sfp.tracking_code = '')  
         ORDER BY 
             sfp.date 
         DESC;`)
 }
 
-const getSwiftPODOrdersStatusModel = (order_id) => {
+const getSwiftPODOrdersStatusModel = (swift_id) => {
     return dbRail.query(`
         SELECT 
             * 
         FROM 
             sfp_orders_webhooks sfph
         WHERE 
-            sfph.order_id = ? 
-        `,[order_id])
+            sfph.swiftpod_id = ? 
+        `,[swift_id])
 }
 
-const updateSwiftPODOrderStatusModel = (order_id, data) => {
+const updateSwiftPODOrderStatusModel = (swift_id, data) => {
     const fieldsToUpdate = Object.keys(data).map(key => `${key} = ?`).join(', ');
 
-    return db.query(`UPDATE swiftpod_orders SET ${fieldsToUpdate} WHERE order_id = ?`,
-        [...Object.values(data), order_id]);
+    return db.query(`UPDATE swiftpod_orders SET ${fieldsToUpdate} WHERE swift_id = ?`,
+        [...Object.values(data), swift_id]);
+}
+
+const getOrdersWithoutUpdateModel = () => {
+    return db.query(`
+        SELECT DISTINCT
+            o.site_order_id, 
+            o.order_id, 
+            so.tracking_code,
+            so.carrier 
+        FROM orders o 
+        JOIN swiftpod_orders so ON 
+            o.site_order_id = so.site_order_id 
+        WHERE 
+            o.shipping_status = 'awaiting_shipment' AND 
+            so.tracking_code IS NOT NULL`);
 }
 
 
 module.exports = {
     getIncomingOrdersModel,
-    getArtFront,
+    getArt,
     getMock,
     getArtInnerNeck,
     getArtOuterNeck,
@@ -156,5 +174,6 @@ module.exports = {
     saveSwiftPODOrderModal,
     getSwiftPODOrderModel,
     getSwiftPODOrdersStatusModel,
-    updateSwiftPODOrderStatusModel
+    updateSwiftPODOrderStatusModel,
+    getOrdersWithoutUpdateModel
 }

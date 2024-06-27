@@ -4,7 +4,7 @@ const {
   getMock,
   saveShippingLabelModel,
   getShipping,
-  getArtFront,
+  getArt,
   saveArtFrontModel,
   getArtInnerNeck,
   getArtOuterNeck,
@@ -14,7 +14,9 @@ const {
   getSwiftPODOrderModel,
   getSwiftPODOrdersStatusModel,
   updateSwiftPODOrderStatusModel,
+  getOrdersWithoutUpdateModel,
 } = require("../models/swiftpod.model");
+const https = require('https');
 
 const headers = {
   "Content-type": "application/json",
@@ -27,67 +29,71 @@ const headers = {
 const sendOrderToSwift = async (req, res) => {
   try {
     const { data } = req.body;
-    // Build order to SwiftPOD
-    // const bodyData = {
-    //     order_id: "CSDUP04262024-L1",
-    //     test_order: true,
-    //     order_status: "draft",
-    //     line_items: [
-    //         {
-    //             order_item_id: "1196784058_SS00022098METSA0400M",
-    //             sku: "UNGT1W00M",
-    //             quantity: 1,
-    //             print_files: [
-    //                 {
-    //                     key: "front",
-    //                     url: "https://www.dropbox.com/scl/fi/cgqyjvdbg66gzi77kd26n/SS00490129WOTSA.png?rlkey=zkxms5e0vow9t8aybzlyhpj6w&st=1iqaxf9g&raw=1"
-    //                 }
-    //             ]
-    //         }
-    //     ],
-    //     address: {
-    //         name: "John Smith",
-    //         email: "johnsmith@demo.com",
-    //         company: "DEMO",
-    //         phone: "(330) 638-1331",
-    //         street1: "4736 Phillips Rice Rd",
-    //         street2: "",
-    //         city: "Cortland",
-    //         state: "OH",
-    //         country: "US",
-    //         zip: "44410",
-    //         force_verified_status: true
-    //     },
-    //     return_address: {
-    //         name: "John Smith",
-    //         email: "johnsmith@demo.com",
-    //         company: "DEMO",
-    //         phone: "(330) 638-1331",
-    //         street1: "4736 Phillips Rice Rd",
-    //         street2: "",
-    //         state: "OH",
-    //         city: "Cortland",
-    //         country: "US",
-    //         zip: "44410"
-    //     },
-    //     shipping_method: "standard",
-    // };
     const body = JSON.stringify(data);
-    console.log(body);
-    const sendOrder = await fetch(`${process.env.SWIFTPOD_BASE_URL}orders`, {
-      headers,
-      method: "POST",
-      body,
-    });
 
-    const sendResponse = await sendOrder.json();
+    const options = {
+      hostname: 'api.swiftpod.com',
+      path: '/v1/orders',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.SWIFTPOD_API_TOKEN}`,
+      },
+    };
+
+    const sendOrder = () => {
+      return new Promise((resolve, reject) => {
+        const req = https.request(options, (res) => {
+          let data = '';
+
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
+
+          res.on('end', () => {
+            resolve(JSON.parse(data));
+          });
+        });
+
+        req.on('error', (e) => {
+          reject(e);
+        });
+
+        req.write(body);
+        req.end();
+      });
+    };
+
+    const sendResponse = await sendOrder();
     res.send({ response: sendResponse });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       error: error.message,
     });
   }
 };
+// const sendOrderToSwift = async (req, res) => {
+//   try {
+//     const { data } = req.body;
+   
+//     const body = JSON.stringify(data);
+//     console.log({body});
+//     const sendOrder = await fetch(`${process.env.SWIFTPOD_BASE_URL}orders`, {
+//       headers,
+//       method: "POST",
+//       body,
+//     });
+
+//     const sendResponse = await sendOrder.json();
+//     res.send({ response: sendResponse });
+//   } catch (error) {
+//     console.log(error)
+//     res.status(500).json({
+//       error: error.message,
+//     });
+//   }
+// };
 
 const getOrderFromSwift = async (req, res) => {
   try {
@@ -136,15 +142,14 @@ const cancelOrderFromSwift = async (req, res) => {
 const getIncomingOrders = async (req, res) => {
   try {
     let orders = [];
-    let i = -1;
-    let order;
     const [result] = await getIncomingOrdersModel();
 
-    //BuildIncomingOrders
-    result.forEach((item, index) => {
-      if (item.siteOrderId !== order?.site_order_id) {
-        i += 1;
-        order = {
+    // Build Incoming Orders
+    result.forEach((item) => {
+      let existingOrder = orders.find(order => order.site_order_id === item.siteOrderId);
+      
+      if (!existingOrder) {
+        existingOrder = {
           site_order_id: item.siteOrderId,
           site_name: item.siteName,
           order_id: item.orderId,
@@ -165,15 +170,17 @@ const getIncomingOrders = async (req, res) => {
           pod_service: item.podService,
           items: [],
         };
-        orders.push(order);
+        orders.push(existingOrder);
       }
-      orders[i].items?.push({
+
+      existingOrder.items.push({
         sku: item.sku,
         design: item.design,
         quantity: item.quantity,
         front_art_url: item.frontArtUrl,
         back_art_url: item.backArtUrl,
         front_mockup_url: item.frontMockupUrl,
+        front_print_area: item.frontPrintArea,
         back_mockup_url: item.backMockupUrl,
         inner_neck_art_url: item?.innerNeckArtUrl,
         outer_neck_art_url: item?.outerNeckArtUrl,
@@ -184,6 +191,7 @@ const getIncomingOrders = async (req, res) => {
         size: item.size,
       });
     });
+
     res.send({
       response: orders,
     });
@@ -199,7 +207,7 @@ const saveArt = async (req, res) => {
     const { data } = req.body;
     data.pod = data.pod.split("_").join(" ");
 
-    const [exist] = await getArtFront(data.art);
+    const [exist] = await getArt(data.art, data.type, data.pod);
     if (exist.length > 0) {
       return res.send({
         msg: "Ya existe este arte...",
@@ -221,7 +229,7 @@ const saveArt = async (req, res) => {
 const saveMockup = async (req, res) => {
   try {
     const { data } = req.body;
-    const [exist] = await getMock(data.sku);
+    const [exist] = await getMock(data.sku, data.type, data.region);
     if (exist.length > 0) {
       return res.send({
         msg: "Ya existe este Mockup...",
@@ -350,8 +358,8 @@ const getSwiftPODOrder = async (req, res) => {
 
 const getSwiftPODOrdersStatus = async (req, res) => {
     try {
-        const order_id = req.params.order_id
-        const [data] = await getSwiftPODOrdersStatusModel(order_id);
+        const swift_id = req.params.swift_id
+        const [data] = await getSwiftPODOrdersStatusModel(swift_id);
 
         res.send({
             data
@@ -368,6 +376,7 @@ const updateSwiftPODOrderStatus = async (req, res) => {
         const order_id = req.params.order_id;
         const data = req.body;
 
+        console.log(`Updating order: ${order_id}`)
         const [result] = await updateSwiftPODOrderStatusModel(order_id, data);
 
         res.send({
@@ -378,6 +387,20 @@ const updateSwiftPODOrderStatus = async (req, res) => {
             error: error.message
         });
     }
+}
+
+const getOrdersWithoutUpdate = async (req, res) => {
+  try {
+      const [data] = await getOrdersWithoutUpdateModel();
+
+      res.send({
+          data
+      });
+  } catch (error) {
+      res.status(500).json({
+          error: error.message
+      });
+  }
 }
 
 module.exports = {
@@ -395,5 +418,6 @@ module.exports = {
   saveSwiftPODOrder,
   getSwiftPODOrder,
   getSwiftPODOrdersStatus,
-  updateSwiftPODOrderStatus
+  updateSwiftPODOrderStatus,
+  getOrdersWithoutUpdate
 };
