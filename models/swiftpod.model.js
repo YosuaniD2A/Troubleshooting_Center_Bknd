@@ -19,7 +19,29 @@ const saveArtFrontModel = (art) => {
         `INSERT INTO art_url 
             (art, url, pod, type) 
         VALUES 
-            (?,?,?,?)`,
+            (?,?,?,?)
+        ON DUPLICATE KEY UPDATE 
+            url = VALUES(url), 
+            pod = VALUES(pod), 
+            type = VALUES(type)`,
+        [
+            art.art,
+            art.url,
+            art.pod,
+            art.type
+        ]);
+}
+
+const saveArtFrontModel_Clone = (art) => {
+    return db.query(
+        `INSERT INTO art_url_clone 
+            (art, url, pod, type) 
+        VALUES 
+            (?,?,?,?)
+        ON DUPLICATE KEY UPDATE 
+            url = VALUES(url), 
+            pod = VALUES(pod), 
+            type = VALUES(type)`,
         [
             art.art,
             art.url,
@@ -37,7 +59,31 @@ const saveMockupModel = (mockup) => {
         `INSERT INTO mockup_url 
             (sku, url, region, type) 
         VALUES 
-            (?,?,?,?)`,
+            (?,?,?,?)
+        ON DUPLICATE KEY UPDATE 
+            sku = VALUES(sku),
+            url = VALUES(url), 
+            region = VALUES(region), 
+            type = VALUES(type)`,
+        [
+            mockup.sku,
+            mockup.url,
+            mockup.region,
+            mockup.type
+        ]);
+}
+
+const saveMockupModel_Clone = (mockup) => {
+    return db.query(
+        `INSERT INTO mockup_url_clone 
+            (sku, url, region, type) 
+        VALUES 
+            (?,?,?,?)
+        ON DUPLICATE KEY UPDATE 
+            sku = VALUES(sku),
+            url = VALUES(url), 
+            region = VALUES(region), 
+            type = VALUES(type)`,
         [
             mockup.sku,
             mockup.url,
@@ -175,5 +221,8 @@ module.exports = {
     getSwiftPODOrderModel,
     getSwiftPODOrdersStatusModel,
     updateSwiftPODOrderStatusModel,
-    getOrdersWithoutUpdateModel
+    getOrdersWithoutUpdateModel,
+
+    saveArtFrontModel_Clone,
+    saveMockupModel_Clone
 }

@@ -26,74 +26,74 @@ const headers = {
 
 // --------------------------- SwiftPOD API -------------------------------------
 
-const sendOrderToSwift = async (req, res) => {
-  try {
-    const { data } = req.body;
-    const body = JSON.stringify(data);
-
-    const options = {
-      hostname: 'api.swiftpod.com',
-      path: '/v1/orders',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.SWIFTPOD_API_TOKEN}`,
-      },
-    };
-
-    const sendOrder = () => {
-      return new Promise((resolve, reject) => {
-        const req = https.request(options, (res) => {
-          let data = '';
-
-          res.on('data', (chunk) => {
-            data += chunk;
-          });
-
-          res.on('end', () => {
-            resolve(JSON.parse(data));
-          });
-        });
-
-        req.on('error', (e) => {
-          reject(e);
-        });
-
-        req.write(body);
-        req.end();
-      });
-    };
-
-    const sendResponse = await sendOrder();
-    res.send({ response: sendResponse });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-};
 // const sendOrderToSwift = async (req, res) => {
 //   try {
 //     const { data } = req.body;
-   
 //     const body = JSON.stringify(data);
-//     console.log({body});
-//     const sendOrder = await fetch(`${process.env.SWIFTPOD_BASE_URL}orders`, {
-//       headers,
-//       method: "POST",
-//       body,
-//     });
 
-//     const sendResponse = await sendOrder.json();
+//     const options = {
+//       hostname: 'api.swiftpod.com',
+//       path: '/v1/orders',
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${process.env.SWIFTPOD_API_TOKEN}`,
+//       },
+//     };
+
+//     const sendOrder = () => {
+//       return new Promise((resolve, reject) => {
+//         const req = https.request(options, (res) => {
+//           let data = '';
+
+//           res.on('data', (chunk) => {
+//             data += chunk;
+//           });
+
+//           res.on('end', () => {
+//             resolve(JSON.parse(data));
+//           });
+//         });
+
+//         req.on('error', (e) => {
+//           reject(e);
+//         });
+
+//         req.write(body);
+//         req.end();
+//       });
+//     };
+
+//     const sendResponse = await sendOrder();
 //     res.send({ response: sendResponse });
 //   } catch (error) {
-//     console.log(error)
+//     console.log(error);
 //     res.status(500).json({
 //       error: error.message,
 //     });
 //   }
 // };
+const sendOrderToSwift = async (req, res) => {
+  try {
+    const { data } = req.body;
+   
+    const body = JSON.stringify(data);
+    console.log({body});
+    const sendOrder = await fetch(`${process.env.SWIFTPOD_BASE_URL}orders`, {
+      headers,
+      method: "POST",
+      body,
+    });
+
+    const sendResponse = await sendOrder.json();
+    res.send({ response: sendResponse });
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
 
 const getOrderFromSwift = async (req, res) => {
   try {
