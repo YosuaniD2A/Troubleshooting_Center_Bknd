@@ -21,7 +21,7 @@ const https = require('https');
 const headers = {
   "Content-type": "application/json",
   Accept: "application/json",
-  Authorization: `Bearer ${process.env.SWIFTPOD_API_TOKEN}`,
+  Authorization: `Bearer ${process.env.SWIFTPOD_API_TOKEN_D2}`,
 };
 
 // --------------------------- SwiftPOD API -------------------------------------
@@ -75,12 +75,23 @@ const headers = {
 // };
 const sendOrderToSwift = async (req, res) => {
   try {
+    const { siteName } = req.params;
     const { data } = req.body;
    
     const body = JSON.stringify(data);
-    console.log({body});
+    console.log({
+      siteName,
+      body
+    });
     const sendOrder = await fetch(`${process.env.SWIFTPOD_BASE_URL}orders`, {
-      headers,
+      headers: {
+        "Content-type": "application/json",
+        Accept: "application/json",
+        Authorization:
+          siteName === "Faire"
+            ? `Bearer ${process.env.SWIFTPOD_API_TOKEN_SW}` // Token para "Faire"
+            : `Bearer ${process.env.SWIFTPOD_API_TOKEN_D2}`,   // Token general
+      },
       method: "POST",
       body,
     });

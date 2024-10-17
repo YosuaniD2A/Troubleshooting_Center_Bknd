@@ -22,6 +22,7 @@ const dbxAuth = new DropboxAuth({
 const uploadImages = async (req, res) => {
   try {
     const { image_type } = req.params;
+    const pod = req.query.pod;
     const files = req.files;
 
     const dbx = new Dropbox({
@@ -47,7 +48,7 @@ const uploadImages = async (req, res) => {
       return res.status(400).send({ message: "No valid files to upload." });
     }
 
-    const results = await uploadFilesInBatch(dbx, filteredFiles, image_type);
+    const results = await uploadFilesInBatch(dbx, filteredFiles, image_type, pod);
 
     res.send({
       response: results,
@@ -61,7 +62,7 @@ const uploadImages = async (req, res) => {
 };
 
 //-------------------------  Functions for Upload Endpoint  ----------------------------
-async function uploadFilesInBatch(dbx, files, image_type) {
+async function uploadFilesInBatch(dbx, files, image_type, pod) {
   const entries = await Promise.all(files.map(async (file) => {
     const content = fs.readFileSync(file.path);
     const path = getUploadPath(file, image_type);
@@ -75,7 +76,7 @@ async function uploadFilesInBatch(dbx, files, image_type) {
   // Usamos un bucle for...of para controlar mejor el flujo y permitir pausas entre cargas
   const results = [];
   for (const entry of entries) {
-    const result = await uploadSingleFileWithRetry(dbx, entry, image_type);
+    const result = await uploadSingleFileWithRetry(dbx, entry, image_type, pod);
     results.push(result);
     // Pausa breve entre cargas para evitar sobrecargar la API
     await delay(500);
@@ -84,9 +85,9 @@ async function uploadFilesInBatch(dbx, files, image_type) {
   return results;
 }
 
-async function uploadSingleFileWithRetry(dbx, entry, image_type, retryCount = 0) {
+async function uploadSingleFileWithRetry(dbx, entry, image_type, pod, retryCount = 0) {
   try {
-    return await uploadSingleFile(dbx, entry, image_type);
+    return await uploadSingleFile(dbx, entry, image_type, pod);
   } catch (error) {
     if (error.error && error.error.reason && error.error.reason['.tag'] === 'too_many_write_operations' && retryCount < MAX_RETRIES) {
       console.log(`Rate limit hit, retrying in ${RETRY_DELAY}ms...`);
@@ -97,7 +98,7 @@ async function uploadSingleFileWithRetry(dbx, entry, image_type, retryCount = 0)
   }
 }
 
-async function uploadSingleFile(dbx, entry, image_type) {
+async function uploadSingleFile(dbx, entry, image_type, pod) {
   const { path: originalPath, content, file } = entry;
 
   try {
@@ -180,18 +181,34 @@ async function uploadSingleFile(dbx, entry, image_type) {
 
     // Guardar en la base de datos
     if (image_type === 'mockup') {
-      await saveMockupModel_Clone({
-        sku: responseObj.sku.replace(/\s\(\d+\)\.jpg$/, '').replace(/\.\w+$/, ''),
+      let sku = responseObj.sku.replace(/\s\(\d+\)\.jpe?g$/, '').replace(/\.\w+$/, '');
+      let type = "front";
+      
+      if (sku.includes('-BACK')) {
+        sku = sku.replace('-BACK', '');
+        type = "back";
+      }
+    
+      await saveMockupModel({
+        sku: sku,
         url: responseObj.url.replace(/dl=0/, "raw=1"),
         region: "",
-        type: "front",
+        type: type,
       });
     } else if (image_type === 'art') {
-      await saveArtFrontModel_Clone({
-        art: responseObj.sku.replace(/\s\(\d+\)\.png$/, '').replace(/\.\w+$/, ''),
+      let art = responseObj.sku.replace(/\s\(\d+\)\.png$/, '').replace(/\.\w+$/, '');
+      let type = "front";
+      
+      if (art.includes('-BACK')) {
+        art = art.replace('-BACK', '');
+        type = "back";
+      }
+    
+      await saveArtFrontModel({
+        art: art,
         url: responseObj.url.replace(/dl=0/, "dl=1"),
-        pod: "swiftpod",
-        type: "front",
+        pod: pod,
+        type: type,
       });
     }
 
@@ -207,9 +224,9 @@ async function uploadSingleFile(dbx, entry, image_type) {
 function getUploadPath(file, image_type) {
   if (image_type === "mockup") {
     const fileName = file.originalname.replace(/__101/, "");
-    return `/Test/Mockups/${fileName}`;
+    return `/Mockups/${fileName}`;
   } else if (image_type === "art") {
-    return `/Test/Respaldo PNG/${file.originalname}`;
+    return `/Respaldo PNG/${file.originalname}`;
   }
   throw new Error(`Invalid image type: ${image_type}`);
 }

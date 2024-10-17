@@ -4,7 +4,7 @@ const router = express.Router();
 
 //--------------- Routes to Handler SwiftPOD API -----------------
 
-router.post('/sendOrderToSwift', sendOrderToSwift);
+router.post('/sendOrderToSwift/:siteName', sendOrderToSwift);
 
 router.get('/getOrderFromSwift/:orderID', getOrderFromSwift);
 

@@ -17,13 +17,17 @@ const swiftpod = require('./routes/swiftpod');
 const thePrintBar = require('./routes/the_print_bar');
 const imageDownloader = require('./routes/image_downloader');
 const dropbox = require('./routes/dropbox');
+const aws = require('./routes/aws');
+const mercadolibreAuth = require('./routes/mercadolibreAuth');
 const { autoLicenseImageToReport } = require('./controllers/shutterstock.controller');
 
 require('dotenv').config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: '*' // O establece tu dominio específico, por ejemplo: 'http://localhost:4200'
+}));
 // app.use(cors({
 //   credentials: true,
 //   origin:['http://192.168.5.194:8080', 'http://192.168.5.194:8080/']
@@ -49,7 +53,9 @@ app.use('/shipping_address', shippingAddressRouter);
 app.use('/swiftpod', swiftpod);
 app.use('/the_print_bar', thePrintBar);
 app.use('/dropbox', dropbox);
+app.use('/aws', aws);
 app.use('/imageDownloader', imageDownloader);
+app.use('/mercadolibreAuth', mercadolibreAuth);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

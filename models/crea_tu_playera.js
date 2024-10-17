@@ -8,7 +8,8 @@ const getCTPOrdersStatusModel = () => {
         FROM 
             crea_tu_playera_orders ctp 
         WHERE 
-            ctp.status != 8 AND 
+            ctp.status != 8 AND
+            ctp.status != 520 AND  
             ctp.status != 516 AND 
             ctp.status != 128 AND 
             ctp.date > STR_TO_DATE('2024-04-04', '%Y-%m-%d') 
