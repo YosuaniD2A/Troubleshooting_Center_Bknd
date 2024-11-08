@@ -19,7 +19,9 @@ const imageDownloader = require('./routes/image_downloader');
 const dropbox = require('./routes/dropbox');
 const aws = require('./routes/aws');
 const mercadolibreAuth = require('./routes/mercadolibreAuth');
+const blanks = require('./routes/blanks');
 const { autoLicenseImageToReport } = require('./controllers/shutterstock.controller');
+const { processOrdersBlankWalmart, exportXlxs, sendMail } = require('./Utilities/blanks');
 
 require('dotenv').config();
 
@@ -56,6 +58,7 @@ app.use('/dropbox', dropbox);
 app.use('/aws', aws);
 app.use('/imageDownloader', imageDownloader);
 app.use('/mercadolibreAuth', mercadolibreAuth);
+app.use('/blanks', blanks);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -80,5 +83,33 @@ app.use(function(err, req, res, next) {
 //   console.log(`Reporte de Shutterstock ejecutado a las: ${date}`);
 
 // });
+
+// Programa la tarea cada 15 min
+cron.schedule('*/15 * * * *', async () => {
+  try {
+    const result = await processOrdersBlankWalmart();
+    console.log("Tarea Upload Blanks Orders ejecutada automáticamente:\n", result);
+  } catch (error) {
+    console.error("Error en la tarea automática Upload Blanks Orders:\n", error.message);
+  }
+});
+// Exportar el Reporte de Blanks todos los dias a las 7 am
+cron.schedule('0 7 * * *', async () => {
+  try {
+    const result = await exportXlxs();
+    console.log("Tarea Export XLXS ejecutada automáticamente:\n", result);
+  } catch (error) {
+    console.error("Error en la tarea automática Export XLXS:\n", error.message);
+  }
+});
+// Enviar el Reporte de Blanks todos los dias a las 7:30 am
+cron.schedule('30 7 * * *', async () => {
+  try {
+    const result = await sendMail();
+    console.log("Tarea Send Mail ejecutada automáticamente:\n", result);
+  } catch (error) {
+    console.error("Error en la tarea automática Send Mail:\n", error.message);
+  }
+});
 
 module.exports = app;

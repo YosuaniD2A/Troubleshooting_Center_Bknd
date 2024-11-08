@@ -256,6 +256,7 @@ const getSalesReportByMark = (initialDate, finalDate, mark) => {
             brand_dictionary b on substr(o.sku, 1, 2) = b.literals join
             shutterstock_metadata sm on cast(substr(o.sku, 3, 8) as signed) = sm.id
         WHERE
+            LENGTH(o.sku) > 15 AND
             o.order_date BETWEEN ? AND ? AND 
             o.proportional > 0 AND 
             o.shipping_status not in('cancelled', 'refunded') AND
@@ -282,6 +283,7 @@ const getSalesReportByMark = (initialDate, finalDate, mark) => {
             orders o join
             brand_dictionary b on substr(o.sku, 1, 2) = b.literals
         WHERE
+            LENGTH(o.sku) > 15 AND
             o.order_date BETWEEN ? AND ? AND 
             o.proportional > 0 AND 
             o.shipping_status not in('cancelled', 'refunded') AND
