@@ -60,7 +60,7 @@ const uploadImages = async (req, res) => {
             return res.status(400).send('No files uploaded');
         }
 
-        // Función para dividir el array de archivos en chunks de hasta 190 elementos
+        // Función para dividir el array de archivos
         const chunkArray = (array, size) => {
             const result = [];
             for (let i = 0; i < array.length; i += size) {

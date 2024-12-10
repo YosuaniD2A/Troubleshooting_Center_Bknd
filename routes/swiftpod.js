@@ -1,5 +1,5 @@
 const express = require('express');
-const { sendOrderToSwift, getOrderFromSwift, cancelOrderFromSwift, getIncomingOrders, saveArt, saveMockup, saveShippingLabel, saveArtNeck, deleteArtNeck, saveSwiftPODOrder, getSwiftPODOrder, getSwiftPODOrdersStatus, updateSwiftPODOrderStatus, getOrdersWithoutUpdate } = require('../controllers/swiftpod.controller');
+const { sendOrderToSwift, getOrderFromSwift, cancelOrderFromSwift, getIncomingOrders, saveArt, saveMockup, saveShippingLabel, saveArtNeck, deleteArtNeck, saveSwiftPODOrder, getSwiftPODOrder, getSwiftPODOrdersStatus, updateSwiftPODOrderStatus, getOrdersWithoutUpdate, linkMockup, linkArt } = require('../controllers/swiftpod.controller');
 const router = express.Router();
 
 //--------------- Routes to Handler SwiftPOD API -----------------
@@ -13,6 +13,10 @@ router.delete('/cancelOrderFromSwift/:orderID', cancelOrderFromSwift);
 //---------------- Routes to DB Relationship ----------------------
 
 router.get('/getIncomingOrders', getIncomingOrders);
+
+router.post('/linkMockup', linkMockup);
+
+router.post('/linkArt', linkArt);
 
 router.post('/saveArt', saveArt);
 

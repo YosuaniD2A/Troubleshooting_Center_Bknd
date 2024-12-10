@@ -20,12 +20,14 @@ const dropbox = require('./routes/dropbox');
 const aws = require('./routes/aws');
 const mercadolibreAuth = require('./routes/mercadolibreAuth');
 const blanks = require('./routes/blanks');
+const listingGenerator = require('./routes/listing_generator');
 const { autoLicenseImageToReport } = require('./controllers/shutterstock.controller');
 const { processOrdersBlankWalmart, exportXlxs, sendMail } = require('./Utilities/blanks');
 
 require('dotenv').config();
 
 const app = express();
+const imagesPath = 'C:/Users/loren/go/src/ptos';
 
 app.use(cors({
   origin: '*' // O establece tu dominio específico, por ejemplo: 'http://localhost:4200'
@@ -44,6 +46,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(imagesPath));
 
 app.use('/', indexRouter);
 app.use('/shutterstock', shutterstockRouter);
@@ -59,6 +62,7 @@ app.use('/aws', aws);
 app.use('/imageDownloader', imageDownloader);
 app.use('/mercadolibreAuth', mercadolibreAuth);
 app.use('/blanks', blanks);
+app.use('/listingGenerator', listingGenerator);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

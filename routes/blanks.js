@@ -1,5 +1,5 @@
 const express = require('express');
-const { getOrdersBlankWalmart, getOrdersYesterday, sendMailReport } = require('../controllers/blanks.controller');
+const { getOrdersBlankWalmart, sendMailReport, generateFileXLXS } = require('../controllers/blanks.controller');
 const router = express.Router();
 
 router.get('/getOrdersBlankWalmart', getOrdersBlankWalmart)

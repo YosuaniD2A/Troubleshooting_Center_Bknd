@@ -26,6 +26,7 @@ const processOrdersBlankWalmart = async () => {
           $expr: {
             $gte: [
               { $toDate: "$orderDate" },
+              // new Date('Tue, 15 Oct 2024 00:00:00 GMT')
               new Date(new Date().setDate(new Date().getDate() - 3)),
             ],
           },
@@ -181,8 +182,25 @@ const processOrdersBlankWalmart = async () => {
       }))
     );
 
+    const ordersUnique = {};
+
+    ordersBuilded.forEach((order) => {
+      const key = `${order.order_number}-${order.sku}`; // Crear una clave única basada en order_number y sku
+
+      if (ordersUnique[key]) {
+        // Si la clave ya existe, incrementar la cantidad del producto existente
+        ordersUnique[key].quantity += order.quantity;
+      } else {
+        // Si es una nueva combinación, añadir el producto al objeto de acumulación
+        ordersUnique[key] = order;
+      }
+    });
+
+    // Convertir el objeto acumulado en un array
+    const finalOrders = Object.values(ordersUnique);
+
     const result = await Promise.all(
-      ordersBuilded.map(async (order) => {
+      finalOrders.map(async (order) => {
         const resp = await saveOrder(order); // Obtener el id de la orden insertada
         if (resp[0].insertId !== 0) {
           // Solo incluir órdenes que sufrieron cambios
@@ -610,7 +628,11 @@ const sendMail = async () => {
   if (filePath) {
     const mailOptions = {
       from: "Automata Blanks <reportes@teeblox.com>", // Remitente
-      to: ["yosuani@d2america.com","frank@fjdinvestments.com","luis@smartprintsink.com"], // Múltiples destinatarios en 'to'
+      to: [
+        "yosuani@d2america.com",
+        "frank@fjdinvestments.com",
+        "luis@smartprintsink.com",
+      ], // Múltiples destinatarios en 'to'
       subject: `Blanks Orders Report ${currentDate}`,
       html: report_template(summaryHtml, storesHtml),
       attachments: [

@@ -149,6 +149,69 @@ const setMongoCTPOrder = async (req, res) => {
     }
 };
 
+const processOrdersWithoutUpdate = async (req, res) => {
+    const data = req.body;
+
+    try {
+        const results = [];
+        for (const order of data) {
+            const payload = {
+                orderId: parseInt(order.order_id),
+                carrierCode: order.carrier,
+                shipDate: new Date().toISOString().split('T')[0],
+                trackingNumber: order.tracking_code,
+                notifyCustomer: true,
+                notifySalesChannel: true,
+            };
+
+            const options = {
+                method: 'POST',
+                headers: {
+                    Authorization: `Basic ${process.env.TOKENBASE64}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            };
+
+            const result = await fetchWithRateLimit(process.env.SHIP_URL_MARKASSHIPPED, options);
+            results.push(result);
+        }
+
+        res.json({ success: true, data: results });
+    } catch (error) {
+        console.error('Error processing orders:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+}
+
+async function fetchWithRateLimit(url, options) {
+    let retries = 3; // Máximo de reintentos permitidos
+
+    while (retries > 0) {
+        const response = await fetch(url, options);
+
+        // Lee los encabezados de Rate Limiting
+        const rateLimitRemaining = response.headers.get('X-Rate-Limit-Remaining');
+        const rateLimitReset = response.headers.get('X-Rate-Limit-Reset');
+
+        if (response.ok) {
+            return await response.json();
+        } else if (response.status === 429) {
+            // Manejo de límite excedido
+            const waitTime = rateLimitReset ? parseInt(rateLimitReset, 10) * 1000 : 1000;
+            console.warn(`Rate limit exceeded. Retrying in ${waitTime / 1000} seconds...`);
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+        } else {
+            const errorText = await response.text();
+            throw new Error(`Error ${response.status}: ${errorText}`);
+        }
+
+        retries--;
+    }
+
+    throw new Error('Exceeded maximum retry attempts due to rate limiting.');
+}
+
 module.exports = {
     sendOrderToCTP,
     getCTPOrdersStatus,
@@ -157,5 +220,6 @@ module.exports = {
 
     getIncomingOrdersCTP,
     saveCTPOrder,
-    setMongoCTPOrder
+    setMongoCTPOrder,
+    processOrdersWithoutUpdate
 }

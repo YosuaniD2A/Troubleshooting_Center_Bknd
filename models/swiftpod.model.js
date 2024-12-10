@@ -54,6 +54,14 @@ const getMock = (sku, type, region) => {
     return db.query(`SELECT * FROM mockup_url WHERE sku = ? AND type = ? AND region = ?`,[sku, type, region])
 }
 
+const getSimilarMock = (skuBase) => {
+    return db.query(`SELECT * FROM mockup_url WHERE sku LIKE ? ORDER BY id DESC LIMIT 1`,[`${skuBase}%`])
+}
+
+const getSimilarArt = (design) => {
+    return db.query(`SELECT * FROM art_url WHERE art LIKE ? ORDER BY id DESC LIMIT 1`,[`${design}%`])
+}
+
 const saveMockupModel = (mockup) => {
     return db.query(
         `INSERT INTO mockup_url 
@@ -209,6 +217,8 @@ module.exports = {
     getIncomingOrdersModel,
     getArt,
     getMock,
+    getSimilarMock,
+    getSimilarArt,
     getArtInnerNeck,
     getArtOuterNeck,
     getShipping,

@@ -10,6 +10,7 @@ const getOrdersBlankWalmart = async (req, res) => {
     const result = await processOrdersBlankWalmart();
     res.json(result);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ msg: error.message });
   }
 };
