@@ -1,6 +1,6 @@
 const { connectionAws } = require("../config/awsConfig");
-const fs = require('fs');
-const { uploadOneImage } = require("../Utilities/upload");
+
+const { uploadImagesAWS } = require("../Utilities/upload");
 const { saveUrlsModel } = require("../models/aws.model");
 
 
@@ -52,63 +52,64 @@ const { saveUrlsModel } = require("../models/aws.model");
 // }
 const uploadImages = async (req, res) => {
     try {
-        const files = req.files;
+        // const files = req.files;
 
-        const s3 = connectionAws();
+        // const s3 = connectionAws();
 
-        if (!files || files.length === 0) {
-            return res.status(400).send('No files uploaded');
-        }
+        // if (!files || files.length === 0) {
+        //     return res.status(400).send('No files uploaded');
+        // }
 
-        // Función para dividir el array de archivos
-        const chunkArray = (array, size) => {
-            const result = [];
-            for (let i = 0; i < array.length; i += size) {
-                result.push(array.slice(i, i + size));
-            }
-            return result;
-        };
+        // // Función para dividir el array de archivos
+        // const chunkArray = (array, size) => {
+        //     const result = [];
+        //     for (let i = 0; i < array.length; i += size) {
+        //         result.push(array.slice(i, i + size));
+        //     }
+        //     return result;
+        // };
 
-        // Divide los archivos en chunks de hasta 150
-        const fileChunks = chunkArray(files, 150);       
+        // // Divide los archivos en chunks de hasta 150
+        // const fileChunks = chunkArray(files, 150);       
 
-        // Función para esperar 10 segundos
-        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        // // Función para esperar 10 segundos
+        // const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-        let allResults = [];
+        // let allResults = [];
 
-        // Recorremos cada chunk de archivos
-        for (const chunk of fileChunks) {
-            // Crear un buffer con los datos leídos y subir cada imagen
-            const uploadPromises = chunk.map(file => {
-                const imgData = fs.readFileSync(file.path);
+        // // Recorremos cada chunk de archivos
+        // for (const chunk of fileChunks) {
+        //     // Crear un buffer con los datos leídos y subir cada imagen
+        //     const uploadPromises = chunk.map(file => {
+        //         const imgData = fs.readFileSync(file.path);
 
-                return uploadOneImage(
-                    Buffer.from(imgData),
-                    file.originalname,
-                    process.env.BUCKET_PTOS_URL,
-                    file.mimetype, 
-                    s3
-                ).then(uploadedImage => {
-                    fs.unlinkSync(file.path);
+        //         return uploadOneImage(
+        //             Buffer.from(imgData),
+        //             file.originalname,
+        //             process.env.BUCKET_PTOS_URL,
+        //             file.mimetype, 
+        //             s3
+        //         ).then(uploadedImage => {
+        //             fs.unlinkSync(file.path);
 
-                    return {
-                        img_key: uploadedImage.Key,
-                        img_url: uploadedImage.Location
-                    };
-                });
-            });
+        //             return {
+        //                 img_key: uploadedImage.Key,
+        //                 img_url: uploadedImage.Location
+        //             };
+        //         });
+        //     });
 
-            // Esperar a que todas las imágenes del chunk se suban
-            const img_urlResults = await Promise.all(uploadPromises);
-            console.log(`Chunk uploaded: ${img_urlResults.length} images`);
+        //     // Esperar a que todas las imágenes del chunk se suban
+        //     const img_urlResults = await Promise.all(uploadPromises);
+        //     console.log(`Chunk uploaded: ${img_urlResults.length} images`);
 
-            // Almacenar los resultados del chunk actual
-            allResults = [...allResults, ...img_urlResults];
+        //     // Almacenar los resultados del chunk actual
+        //     allResults = [...allResults, ...img_urlResults];
 
-            // Esperar 10 segundos antes de procesar el siguiente chunk
-            await delay(20000);
-        }
+        //     // Esperar 10 segundos antes de procesar el siguiente chunk
+        //     await delay(20000);
+        // }
+        const allResults = await uploadImagesAWS(req);
 
         res.send({
             data: allResults,

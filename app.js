@@ -2,6 +2,7 @@ const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 const logger = require('morgan');
 const cors = require("cors");
 const cron = require('node-cron'); 
@@ -20,9 +21,11 @@ const dropbox = require('./routes/dropbox');
 const aws = require('./routes/aws');
 const mercadolibreAuth = require('./routes/mercadolibreAuth');
 const blanks = require('./routes/blanks');
+const coppel = require('./routes/coppel');
 const listingGenerator = require('./routes/listing_generator');
 const { autoLicenseImageToReport } = require('./controllers/shutterstock.controller');
 const { processOrdersBlankWalmart, exportXlxs, sendMail } = require('./Utilities/blanks');
+const { fetchShippingOrders, saveCoppelOrders } = require('./Utilities/coppel.utilities');
 
 require('dotenv').config();
 
@@ -40,6 +43,10 @@ app.use(cors({
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
+
+// Aumenta el límite a 50MB, por ejemplo
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -62,6 +69,7 @@ app.use('/aws', aws);
 app.use('/imageDownloader', imageDownloader);
 app.use('/mercadolibreAuth', mercadolibreAuth);
 app.use('/blanks', blanks);
+app.use('/coppel', coppel);
 app.use('/listingGenerator', listingGenerator);
 
 // catch 404 and forward to error handler
@@ -88,7 +96,8 @@ app.use(function(err, req, res, next) {
 
 // });
 
-// Programa la tarea cada 15 min
+//------------------------ Tareas Programadas para ejecucion automatica ---------------------
+// cargar ordenes de Blanks cada 15 min
 cron.schedule('*/15 * * * *', async () => {
   try {
     const result = await processOrdersBlankWalmart();
@@ -113,6 +122,36 @@ cron.schedule('30 7 * * *', async () => {
     console.log("Tarea Send Mail ejecutada automáticamente:\n", result);
   } catch (error) {
     console.error("Error en la tarea automática Send Mail:\n", error.message);
+  }
+});
+//Iniciando tarea programada para procesar órdenes de Coppel...
+cron.schedule("*/15 * * * *", async () => {
+  try {
+    const shippingOrders = await fetchShippingOrders();
+
+    if (
+      !shippingOrders ||
+      !shippingOrders.orders ||
+      shippingOrders.orders.length === 0
+    ) {
+      console.log("No se encontraron órdenes para procesar.");
+      return;
+    }
+
+    const saveResult = await saveCoppelOrders(shippingOrders);
+
+    if (!saveResult.success) {
+      console.error(
+        "Error al guardar órdenes:",
+        saveResult.message,
+        saveResult.errors || ""
+      );
+      return;
+    }
+
+    console.log("Tarea Ordenes Coppel ejecutada automáticamente.", shippingOrders);
+  } catch (error) {
+    console.error("Error en la tarea automática Ordenes Coppel:\n", error.message);
   }
 });
 

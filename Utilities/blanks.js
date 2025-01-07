@@ -627,7 +627,7 @@ const sendMail = async () => {
 
   if (filePath) {
     const mailOptions = {
-      from: "Automata Blanks <reportes@teeblox.com>", // Remitente
+      from: "Automata Blanks <platforms@teeblox.com>", // Remitente
       to: [
         "yosuani@d2america.com",
         "frank@fjdinvestments.com",

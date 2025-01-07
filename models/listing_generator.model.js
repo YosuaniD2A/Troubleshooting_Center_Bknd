@@ -52,9 +52,51 @@ const getMockupsModel = (pto) => {
         `,[pto]);
 }
 
+const saveMockupDetailModel = (data) => {
+    return db.query(`
+        INSERT INTO 
+            mockup_url_details 
+            (parent_sku, brand, design, classification, product, sku, color, size, img1, img2, img3) 
+        VALUES 
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,[data.parent_sku, data.brand, data.design, data.classification, data.product,
+            data.sku, data.color, data.size, data.img1, data.img2, data.img3]);
+}
+
+const getPriceRelationshipModel = (data) => { 
+    return db.query(`
+        SELECT 
+            price AS final_price
+        FROM (
+            SELECT 
+                lpp.price AS price, 
+                1 AS priority
+            FROM license_product_price lpp
+            WHERE lpp.license = ? 
+              AND lpp.product = ?
+              AND lpp.color = ?
+              AND lpp.size = ?
+            UNION ALL
+            SELECT 
+                po.price AS price, 
+                2 AS priority
+            FROM product_offering po
+            WHERE po.classification_code = ?
+              AND po.product_code = ?
+              AND po.color_code = ?
+              AND po.size_code = ?
+        ) AS combined
+        ORDER BY priority
+        LIMIT 1;
+    `, [data.brand, data.product, data.color, data.size, data.classification, data.product, data.color, data.size]);
+};
+
+
 
 module.exports = {
     getPtosListModel,
     getPTOModel,
-    getMockupsModel
+    getMockupsModel,
+    saveMockupDetailModel,
+    getPriceRelationshipModel
 }
