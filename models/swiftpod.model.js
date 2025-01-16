@@ -10,6 +10,22 @@ const getIncomingOrdersModel = () => {
     SELECT * FROM pod2_orders`);
 }
 
+const getSwiftpodBrandModel = (design) => {
+    return db.query(`
+        SELECT 
+            CASE 
+                WHEN b.license IS NULL THEN 'unknown' 
+                ELSE b.license 
+            END AS brand_name
+        FROM 
+            swiftpod_metadata m
+        LEFT JOIN 
+            swiftpod_brands b
+            ON SUBSTRING(m.swiftpod_id, 1, 2) = b.signal -- Relaciona con el brand usando los primeros 2 caracteres
+        WHERE 
+            LPAD(m.id, 8, '0') = ?`,[design])
+}
+
 const getArt = (art, type, pod) => {
     return db.query(`SELECT * FROM art_url WHERE art = ? AND type = ? AND pod = ?`,[art, type, pod])
 }
@@ -215,6 +231,7 @@ const getOrdersWithoutUpdateModel = () => {
 
 module.exports = {
     getIncomingOrdersModel,
+    getSwiftpodBrandModel,
     getArt,
     getMock,
     getSimilarMock,

@@ -17,6 +17,7 @@ const {
   getOrdersWithoutUpdateModel,
   getSimilarMock,
   getSimilarArt,
+  getSwiftpodBrandModel,
 } = require("../models/swiftpod.model");
 const https = require("https");
 const { Dropbox } = require("dropbox");
@@ -556,6 +557,20 @@ const saveShippingLabel = async (req, res) => {
   }
 };
 
+const getSwiftpodBrand = async (req, res) => {
+  try {
+    const [data] = await getSwiftpodBrandModel(req.params.design);
+
+    res.send({
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
 //----------------------------- Order in Tables -----------------------------
 
 const saveSwiftPODOrder = async (req, res) => {
@@ -648,6 +663,7 @@ module.exports = {
   saveArtNeck,
   saveShippingLabel,
   deleteArtNeck,
+  getSwiftpodBrand,
 
   saveSwiftPODOrder,
   getSwiftPODOrder,

@@ -1,10 +1,14 @@
-const { log } = require("console");
 const {
   getPtosListModel,
   getPTOModel,
   getMockupsModel,
   saveMockupDetailModel,
   getPriceRelationshipModel,
+  getMpnBySku,
+  getLastMPNModel,
+  saveMPNModel,
+  updatePTOsModel,
+  getColorsModel,
 } = require("../models/listing_generator.model");
 const { sizeMapping } = require("../Utilities/general.utilities");
 const { uploadImagesAWS } = require("../Utilities/upload");
@@ -29,6 +33,21 @@ const getPTO = async (req, res) => {
   try {
     const { pto } = req.params;
     const [data] = await getPTOModel(pto);
+
+    res.send({
+      data,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+const getColors = async (req, res) => {
+  try {
+    const [data] = await getColorsModel();
 
     res.send({
       data,
@@ -139,8 +158,23 @@ const getMockupURLs = async (req, res) => {
   }
 };
 
+const getLastMPN = async (req, res) => {
+  try {
+    const [data] = await getLastMPNModel();
+    res.send({
+      data
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
 const saveMockupDetails = async (req, res) => {
   try {
+    const { pto } = req.params;
     const { mockupData } = req.body;
 
     if (!Array.isArray(mockupData)) {
@@ -151,20 +185,30 @@ const saveMockupDetails = async (req, res) => {
 
     // Validación y mapeo de datos
     const allInsertions = mockupData.flatMap((item) => {
-      const { brand, classification, design, parent_sku, product, sizes } = item;
+      const { brand, classification, design, parent_sku, product, sizes } =
+        item;
 
       if (!sizes || !Array.isArray(sizes)) {
         throw new Error("El campo sizes debe ser un array.");
       }
 
       return sizes.map((sizeData) => {
-        const { full_sku, color, size, urls } = sizeData;
+        const { full_sku, color, size, urls, mpn } = sizeData;
 
         if (!Array.isArray(urls) || urls.length < 3) {
           throw new Error("Cada size debe incluir un array de 3 URLs.");
         }
 
-        return saveMockupDetailModel({
+        // Guardar en `mpn_clone`
+        const saveMPNPromise = saveMPNModel({
+          mpn,
+          status: "used", 
+          sku: full_sku,
+          pto, 
+        });
+
+        // Guardar en `mockup_url_details`
+        const saveMockupPromise = saveMockupDetailModel({
           parent_sku,
           brand,
           design,
@@ -177,11 +221,13 @@ const saveMockupDetails = async (req, res) => {
           img2: urls[1],
           img3: urls[2],
         });
+
+        return [saveMockupPromise, saveMPNPromise];
       });
     });
 
     // Ejecutar todas las inserciones en paralelo
-    await Promise.all(allInsertions);
+    await Promise.all(allInsertions.flat());
 
     res.status(201).json({ message: "Datos registrados con éxito." });
   } catch (error) {
@@ -193,36 +239,76 @@ const saveMockupDetails = async (req, res) => {
   }
 };
 
+const updatePTOs = async (req, res) => {
+  try {
+    const { pto } = req.body
+
+    if(pto.length == 0)
+      return res.status(400).json({ error: "Invalid request body: the list is empty" });
+
+    for(const design of pto){
+      const data = {
+        title: design.title,
+        status: 'Sent to list',
+        description: design.description,
+        keywords: design.keywords
+      }
+      console.log(design);
+      
+      const resp = await updatePTOsModel(design.pto, design.design, data);
+      console.log(resp);
+      
+    }
+
+    res.send({
+      msg: 'PTOs updated'
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
 const getPriceRelationship = async (req, res) => {
   try {
     const { mockupData } = req.body;
 
-    if (!mockupData.brand || !mockupData.classification || !mockupData.product || !Array.isArray(mockupData.sizes)) {
+    if (
+      !mockupData.brand ||
+      !mockupData.classification ||
+      !mockupData.product ||
+      !Array.isArray(mockupData.sizes)
+    ) {
       return res.status(400).json({ error: "Invalid request body" });
     }
 
     const updatedSizes = await Promise.all(
       mockupData.sizes.map(async (sizeObj) => {
-        const { color, size } = sizeObj;
+        const { color, size, full_sku } = sizeObj;
         const [priceResult] = await getPriceRelationshipModel({
-          brand: mockupData.brand, 
-          classification: mockupData.classification, 
-          product: mockupData.product, 
-          color, 
-          size
-        })
-        console.log(priceResult);
-        
+          brand: mockupData.brand,
+          classification: mockupData.classification,
+          product: mockupData.product,
+          color,
+          size,
+        });
+        const [mpnResult] = await getMpnBySku(full_sku); //Obtener el valor mpn correspondiente
+
         return {
           ...sizeObj,
-          price: priceResult[0] ? priceResult[0].final_price : null // Si no hay resultado, price será null
+          price: priceResult[0] ? priceResult[0].final_price : 0,
+          mpn: mpnResult[0] ? mpnResult[0].mpn : null,
+          msrp: priceResult[0] ? parseFloat((priceResult[0].final_price * 1.5).toFixed(2)) : 0
         };
-      }));
+      })
+    );
 
-      return res.json({
-       ...mockupData,
-        sizes: updatedSizes
-      });
+    return res.json({
+      ...mockupData,
+      sizes: updatedSizes,
+    });
   } catch (error) {
     console.error("Error al intentar relacionar los precios:", error);
     res.status(500).json({
@@ -230,13 +316,16 @@ const getPriceRelationship = async (req, res) => {
       error: error.message,
     });
   }
-}
+};
 
 module.exports = {
   getPtosList,
   getPTO,
   getMockups,
+  getLastMPN,
+  updatePTOs,
+  getColors,
   getMockupURLs,
   saveMockupDetails,
-  getPriceRelationship
+  getPriceRelationship,
 };

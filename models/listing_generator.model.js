@@ -39,6 +39,17 @@ const getPTOModel = (pto) => {
         `,[pto]);
 }
 
+const getColorsModel = () => {
+    return db.query(`
+        SELECT DISTINCT color, pod_code
+            FROM tcolor
+        WHERE color IS NOT NULL
+            AND color != ''
+            AND pod_code IS NOT NULL
+            AND pod_code != ''
+        `);
+}
+
 const getMockupsModel = (pto) => {
     return db.query(`
         SELECT 
@@ -91,12 +102,57 @@ const getPriceRelationshipModel = (data) => {
     `, [data.brand, data.product, data.color, data.size, data.classification, data.product, data.color, data.size]);
 };
 
+const updatePTOsModel = (pto, design, data) => {
+    const fieldsToUpdate = Object.keys(data)
+      .map((key) => `${key} = ?`)
+      .join(", ");
+  
+    return db.query(
+      `UPDATE ptos SET ${fieldsToUpdate} WHERE pto = ? AND design = ?`,
+      [...Object.values(data), pto, design]
+    );
+  };
 
+//Obtener el ultimo mpn registrado
+const getLastMPNModel = () => {
+    return db.query(`
+        SELECT 
+            mpn 
+        FROM 
+            mpn_clone 
+        ORDER BY id DESC 
+        LIMIT 1;`);
+}
+
+//Registrar productos como MPN
+const saveMPNModel = (data) => {
+    return db.query(`
+        INSERT INTO 
+            mpn_clone 
+            (mpn, status, sku, pto) 
+        VALUES 
+            (?, ?, ?, ?)
+        `, [data.mpn, data.status, data.sku, data.pto]);
+};
+//Crear una consulta que me devuelva el mpn segun el sku
+const getMpnBySku = (sku) => {
+    return db.query(`
+        SELECT mpn 
+        FROM mpn_clone 
+        WHERE sku = ?
+        LIMIT 1;
+    `, [sku]);
+};
 
 module.exports = {
     getPtosListModel,
     getPTOModel,
+    getLastMPNModel,
     getMockupsModel,
+    updatePTOsModel,
+    getColorsModel,
     saveMockupDetailModel,
-    getPriceRelationshipModel
+    saveMPNModel,
+    getPriceRelationshipModel,
+    getMpnBySku
 }

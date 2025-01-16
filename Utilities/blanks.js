@@ -13,8 +13,11 @@ const { transporter } = require("../config/nodemailer");
 const { report_template } = require("./templates");
 
 const processOrdersBlankWalmart = async () => {
+  // const client = new MongoClient(
+  //   "mongodb://d2:D2America$0@bodega2tsg.ddns.net:28018/?authMechanism=DEFAULT&authSource=swiftpod"
+  // );
   const client = new MongoClient(
-    "mongodb://d2:D2America$0@bodega2tsg.ddns.net:28018/?authMechanism=DEFAULT&authSource=swiftpod"
+    "mongodb://d2:D2America$0@189.222.207.169:28018/?authMechanism=DEFAULT&authSource=swiftpod"
   );
   try {
     await client.connect();
