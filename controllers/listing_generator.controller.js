@@ -118,7 +118,7 @@ const getMockupURLs = async (req, res) => {
         } = mockup;
 
         // Implementar el proceso de subida a AWS y utilizar las URL
-        //const uploadedImages = await uploadImagesAWS({ body: { urls: paths } });
+        const uploadedImages = await uploadImagesAWS({ body: { urls: paths } });
 
         // Obtiene las tallas disponibles para la clasificación y el producto
         const sizes =
@@ -131,8 +131,8 @@ const getMockupURLs = async (req, res) => {
           full_sku: `${sku}${size}`,
           color,
           size,
-          //urls: uploadedImages.map((image) => image.img_url),
-          urls: paths,
+          urls: uploadedImages.map((image) => image.img_url),
+          //urls: paths,
         }));
 
         // Retorna un nuevo objeto con las tallas disponibles y las URLs mapeadas
