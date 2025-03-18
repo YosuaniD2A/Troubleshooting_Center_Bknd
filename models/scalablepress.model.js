@@ -1,7 +1,7 @@
 const db = require("../config/dbConfig").promise();
 
 const getOrdersWithoutSP_Id = () => {
-    return db.query("SELECT * FROM scalable_press_orders sp WHERE  sp.scalable_press_id = '' OR sp.scalable_press_id IS NULL")
+    return db.query("SELECT * FROM scalable_press_orders sp WHERE  sp.scalable_press_id = '' OR sp.scalable_press_id IS NULL OR sp.order_status = ''")
 }
 
 const getSizes = () => {

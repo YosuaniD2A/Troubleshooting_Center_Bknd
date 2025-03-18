@@ -40,13 +40,21 @@ const getPTOModel = (pto) => {
 }
 
 const getColorsModel = () => {
+    // return db.query(`
+    //     SELECT DISTINCT color, pod_code
+    //         FROM tcolor
+    //     WHERE color IS NOT NULL
+    //         AND color != ''
+    //         AND pod_code IS NOT NULL
+    //         AND pod_code != ''
+    //     `);
     return db.query(`
-        SELECT DISTINCT color, pod_code
-            FROM tcolor
-        WHERE color IS NOT NULL
-            AND color != ''
-            AND pod_code IS NOT NULL
-            AND pod_code != ''
+        SELECT DISTINCT tc.color, tc.pod_code, tcu.url
+            FROM tcolor tc LEFT JOIN tcolor_url tcu ON tcu.color = tc.color
+        WHERE tc.color IS NOT NULL
+            AND tc.color != ''
+            AND tc.pod_code IS NOT NULL
+            AND tc.pod_code != ''
         `);
 }
 
@@ -119,7 +127,7 @@ const getLastMPNModel = () => {
         SELECT 
             mpn 
         FROM 
-            mpn_clone 
+            mpn 
         ORDER BY id DESC 
         LIMIT 1;`);
 }
@@ -128,7 +136,7 @@ const getLastMPNModel = () => {
 const saveMPNModel = (data) => {
     return db.query(`
         INSERT INTO 
-            mpn_clone 
+            mpn 
             (mpn, status, sku, pto) 
         VALUES 
             (?, ?, ?, ?)
@@ -138,7 +146,7 @@ const saveMPNModel = (data) => {
 const getMpnBySku = (sku) => {
     return db.query(`
         SELECT mpn 
-        FROM mpn_clone 
+        FROM mpn 
         WHERE sku = ?
         LIMIT 1;
     `, [sku]);

@@ -109,7 +109,9 @@ const uploadImages = async (req, res) => {
         //     // Esperar 10 segundos antes de procesar el siguiente chunk
         //     await delay(20000);
         // }
-        const allResults = await uploadImagesAWS(req);
+        const bucket = req.body.data;
+
+        const allResults = await uploadImagesAWS(req, JSON.parse(bucket));
 
         res.send({
             data: allResults,

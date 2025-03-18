@@ -119,7 +119,7 @@ const uploadOneImage = async (imgBuffer, productName, bucket, contentType, s3) =
 //         console.error(error);
 //     }
 // };
-const uploadImagesAWS = async (req) => {
+const uploadImagesAWS = async (req, bucket) => {
     try {
         const pLimit = (await import('p-limit')).default;
         const { urls } = req.body; // Lista de URLs opcional
@@ -144,7 +144,7 @@ const uploadImagesAWS = async (req) => {
                     const uploadedImage = await uploadOneImage(
                         Buffer.from(imgData),
                         file.originalname,
-                        process.env.BUCKET_PTOS_URL,
+                        bucket,
                         file.mimetype,
                         s3
                     );
@@ -181,7 +181,7 @@ const uploadImagesAWS = async (req) => {
                     const uploadedImage = await uploadOneImage(
                         Buffer.from(imageBuffer),
                         filename,
-                        process.env.BUCKET_PTOS_URL,
+                        bucket,
                         mimetype,
                         s3
                     );

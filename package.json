@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www"
+    "dev": "nodemon ./bin/www",
+    "electron": "electron ./main.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.654.0",
@@ -31,12 +32,14 @@
     "mysql2": "^3.6.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
+    "openai": "^4.86.1",
     "p-limit": "^6.2.0",
     "path": "^0.12.7",
     "pug": "2.0.0-beta11",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "electron": "^34.1.1",
     "nodemon": "^3.0.1"
   }
 }

@@ -118,7 +118,7 @@ const getMockupURLs = async (req, res) => {
         } = mockup;
 
         // Implementar el proceso de subida a AWS y utilizar las URL
-        const uploadedImages = await uploadImagesAWS({ body: { urls: paths } });
+        const uploadedImages = await uploadImagesAWS({ body: { urls: paths } }, process.env.BUCKET_PTOS_URL);
 
         // Obtiene las tallas disponibles para la clasificación y el producto
         const sizes =
@@ -132,7 +132,7 @@ const getMockupURLs = async (req, res) => {
           color,
           size,
           urls: uploadedImages.map((image) => image.img_url),
-          //urls: paths,
+          // urls: paths,
         }));
 
         // Retorna un nuevo objeto con las tallas disponibles y las URLs mapeadas
@@ -195,8 +195,8 @@ const saveMockupDetails = async (req, res) => {
       return sizes.map((sizeData) => {
         const { full_sku, color, size, urls, mpn } = sizeData;
 
-        if (!Array.isArray(urls) || urls.length < 3) {
-          throw new Error("Cada size debe incluir un array de 3 URLs.");
+        if (!Array.isArray(urls) || urls.length < 2) {
+          throw new Error("Cada size debe incluir un array de al menos 2 URLs.");
         }
 
         // Guardar en `mpn_clone`
@@ -218,8 +218,8 @@ const saveMockupDetails = async (req, res) => {
           color,
           size,
           img1: urls[0],
-          img2: urls[1],
-          img3: urls[2],
+          img2: urls[1] ? urls[1] : '',
+          img3: urls[2] ? urls[2] : '',
         });
 
         return [saveMockupPromise, saveMPNPromise];

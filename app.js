@@ -23,6 +23,8 @@ const mercadolibreAuth = require('./routes/mercadolibreAuth');
 const blanks = require('./routes/blanks');
 const coppel = require('./routes/coppel');
 const listingGenerator = require('./routes/listing_generator');
+const mockupGenerator = require('./routes/mockup_generator');
+const infoGenerator = require('./routes/ai_generator');
 const { autoLicenseImageToReport } = require('./controllers/shutterstock.controller');
 const { processOrdersBlankWalmart, exportXlxs, sendMail } = require('./Utilities/blanks');
 const { fetchShippingOrders, saveCoppelOrders } = require('./Utilities/coppel.utilities');
@@ -71,6 +73,8 @@ app.use('/mercadolibreAuth', mercadolibreAuth);
 app.use('/blanks', blanks);
 app.use('/coppel', coppel);
 app.use('/listingGenerator', listingGenerator);
+app.use('/mockupGenerator', mockupGenerator);
+app.use('/infoGenerator', infoGenerator);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

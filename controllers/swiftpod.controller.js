@@ -82,6 +82,9 @@ const sendOrderToSwift = async (req, res) => {
   try {
     const { siteName } = req.params;
     const { data } = req.body;
+    if(siteName === "Faire"){
+      console.log('Orden destino Faire')
+    }
 
     const body = JSON.stringify(data);
     console.log({
@@ -214,6 +217,7 @@ const getIncomingOrders = async (req, res) => {
       response: orders,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       error: error.message,
     });
